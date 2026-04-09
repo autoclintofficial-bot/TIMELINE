@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>Settings — WorkTrack</title>
+  <link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+<div class="topbar">
+  <div class="topbar-left"><div class="sb-icon" style="width:28px;height:28px;font-size:.9rem">⏱</div>Settings</div>
+  <button class="btn btn-sm btn-secondary" onclick="logout()">Sign Out</button>
+</div>
+<div class="page">
+  <nav class="sidebar">
+    <div class="sb-logo"><div class="sb-logo-row"><div class="sb-icon">⏱</div><div><div class="sb-name">WorkTrack</div><div class="sb-sub">Settings</div></div></div></div>
+    <div class="sb-nav">
+      <div class="sb-section">Navigation</div>
+      <a class="nav-item" href="admin-dashboard.html"><span class="ni">📊</span>Dashboard</a>
+      <a class="nav-item" href="report.html"><span class="ni">📈</span>Reports</a>
+      <a class="nav-item active"><span class="ni">⚙️</span>Settings</a>
+    </div>
+    <div class="sb-foot">
+      <div class="sb-user"><div class="sb-avatar" id="sidebar-avatar">A</div><div><div class="sb-uname" id="sidebar-username">Admin</div><div class="sb-urole" id="sidebar-role">Administrator</div></div></div>
+      <button class="btn btn-secondary btn-sm btn-full" onclick="logout()">🚪 Sign Out</button>
+    </div>
+  </nav>
+  <main class="content">
+    <div class="ph"><div><h1>System Settings</h1><p class="t2">Configure work rules, scoring and penalties</p></div></div>
+    <div style="max-width:580px">
+      <div class="card mb2">
+        <div class="card-title">Work Rules</div>
+        <div class="form-group">
+          <label class="form-label">Duty Hours Per Day</label>
+          <input class="form-control" type="number" id="s-duty" min="1" max="24" step="0.5"/>
+          <p class="form-hint">Expected working hours each day</p>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Max Break Minutes Per Day</label>
+          <input class="form-control" type="number" id="s-maxbrk" min="1" max="480"/>
+          <p class="form-hint">Total break allowed before penalties kick in</p>
+        </div>
+      </div>
+      <div class="card mb2">
+        <div class="card-title">Score & Penalty</div>
+        <div class="form-row">
+          <div class="form-group"><label class="form-label">Default Daily Score</label><input class="form-control" type="number" id="s-score" min="1" max="100"/><p class="form-hint">Starting score each day</p></div>
+          <div class="form-group"><label class="form-label">Penalty Points</label><input class="form-control" type="number" id="s-pen" min="1" max="50"/><p class="form-hint">Points deducted per interval</p></div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Penalty Interval (minutes)</label>
+          <input class="form-control" type="number" id="s-interval" min="1" max="120"/>
+          <p class="form-hint">Every X extra minutes over break limit = penalty</p>
+        </div>
+        <div class="card card-sm" style="background:var(--bg2);border-style:dashed;margin-top:.5rem">
+          <div class="card-title mb1">Live Example</div>
+          <div class="tsm t2" id="s-example" style="line-height:2"></div>
+        </div>
+      </div>
+      <div class="fca gap2">
+        <button class="btn btn-primary" onclick="saveSettings()">💾 Save Settings</button>
+        <button class="btn btn-secondary" onclick="resetDefaults()">↺ Reset Defaults</button>
+      </div>
+    </div>
+  </main>
+</div>
+<div id="toast-wrap"></div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="config.js"></script>
+<script>
+if (!Session.requireAdmin()) throw new Error('Not authorized');
+renderSidebarUser();
+
+async function loadSettings() {
+  const s = await getSettings();
+  document.getElementById('s-duty').value = s.duty_hours;
+  document.getElementById('s-maxbrk').value = s.max_break_minutes;
+  document.getElementById('s-score').value = s.daily_score;
+  document.getElementById('s-pen').value = s.penalty_points;
+  document.getElementById('s-interval').value = s.penalty_interval_minutes;
+  updateExample();
+}
+
+function updateExample() {
+  const duty = parseFloat(document.getElementById('s-duty').value)||9;
+  const maxB = parseInt(document.getElementById('s-maxbrk').value)||60;
+  const score = parseInt(document.getElementById('s-score').value)||10;
+  const pen = parseInt(document.getElementById('s-pen').value)||1;
+  const interval = parseInt(document.getElementById('s-interval').value)||10;
+  const exBreak = maxB + 20;
+  const extra = 20;
+  const penalties = Math.floor(extra/interval);
+  const final = Math.max(0, score - penalties*pen);
+  const color = final>=score ? 'var(--green)' : 'var(--red)';
+  document.getElementById('s-example').innerHTML = `
+    Duty per day: <strong>${duty}h</strong> &nbsp;|&nbsp; Max break: <strong>${maxB} min</strong><br>
+    Example: Employee takes <strong>${exBreak} min</strong> break<br>
+    Extra: <strong>${extra} min</strong> ÷ <strong>${interval} min</strong> = <strong>${penalties} penalties</strong><br>
+    Deduction: <strong>${penalties} × ${pen} = ${penalties*pen} pts</strong><br>
+    Final score: <strong style="color:${color}">${final} / ${score}</strong>
+  `;
+}
+
+async function saveSettings() {
+  const duty = parseFloat(document.getElementById('s-duty').value);
+  const maxB = parseInt(document.getElementById('s-maxbrk').value);
+  const score = parseInt(document.getElementById('s-score').value);
+  const pen = parseInt(document.getElementById('s-pen').value);
+  const interval = parseInt(document.getElementById('s-interval').value);
+  if ([duty,maxB,score,pen,interval].some(isNaN)) { showToast('All fields must be valid numbers','error'); return; }
+  const { error } = await db.from('settings').upsert({ id:1, duty_hours:duty, max_break_minutes:maxB, daily_score:score, penalty_points:pen, penalty_interval_minutes:interval });
+  if (error) { showToast(error.message,'error'); return; }
+  showToast('Settings saved ✓','success');
+}
+
+async function resetDefaults() {
+  const { error } = await db.from('settings').upsert({ id:1, duty_hours:9, max_break_minutes:60, daily_score:10, penalty_points:1, penalty_interval_minutes:10 });
+  if (error) { showToast(error.message,'error'); return; }
+  await loadSettings();
+  showToast('Reset to defaults','info');
+}
+
+['s-duty','s-maxbrk','s-score','s-pen','s-interval'].forEach(id => document.getElementById(id).addEventListener('input', updateExample));
+loadSettings();
+</script>
+</body>
+</html>

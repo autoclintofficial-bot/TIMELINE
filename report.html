@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>Reports — WorkTrack</title>
+  <link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+<div class="topbar">
+  <div class="topbar-left"><div class="sb-icon" style="width:28px;height:28px;font-size:.9rem">⏱</div>Reports</div>
+  <button class="btn btn-sm btn-secondary" onclick="logout()">Sign Out</button>
+</div>
+<div class="page">
+  <nav class="sidebar">
+    <div class="sb-logo"><div class="sb-logo-row"><div class="sb-icon">⏱</div><div><div class="sb-name">WorkTrack</div><div class="sb-sub">Reports</div></div></div></div>
+    <div class="sb-nav">
+      <div class="sb-section">Navigation</div>
+      <a class="nav-item" id="nav-dash" href="#"><span class="ni">🏠</span>Dashboard</a>
+      <a class="nav-item active"><span class="ni">📈</span>Reports</a>
+      <a class="nav-item" id="nav-settings" href="settings.html" style="display:none"><span class="ni">⚙️</span>Settings</a>
+    </div>
+    <div class="sb-foot">
+      <div class="sb-user"><div class="sb-avatar" id="sidebar-avatar">U</div><div><div class="sb-uname" id="sidebar-username">User</div><div class="sb-urole" id="sidebar-role">Employee</div></div></div>
+      <button class="btn btn-secondary btn-sm btn-full" onclick="logout()">🚪 Sign Out</button>
+    </div>
+  </nav>
+  <main class="content">
+    <div class="ph">
+      <div><h1>Reports</h1><p class="t2" id="report-sub">Attendance history</p></div>
+      <button class="btn btn-outline" onclick="exportCSV()">📊 Export CSV</button>
+    </div>
+
+    <!-- Admin employee filter -->
+    <div id="admin-filter" style="display:none" class="card card-sm mb2">
+      <div class="fca gap2" style="flex-wrap:wrap">
+        <label class="form-label" style="margin:0;white-space:nowrap">Employee:</label>
+        <select class="form-control" id="f-emp" onchange="loadReport()" style="max-width:240px"><option value="all">All Employees</option></select>
+      </div>
+    </div>
+
+    <div class="tabs">
+      <button class="tab-btn active" onclick="switchTab('daily',this)">Daily</button>
+      <button class="tab-btn" onclick="switchTab('weekly',this)">Weekly</button>
+      <button class="tab-btn" onclick="switchTab('monthly',this)">Monthly</button>
+      <button class="tab-btn" onclick="switchTab('calendar',this)">Calendar</button>
+    </div>
+
+    <!-- DAILY -->
+    <div class="tab-panel active" id="tab-daily">
+      <div class="search-row"><input type="date" class="form-control" id="d-date" style="max-width:200px" onchange="loadReport()"/></div>
+      <div class="card"><div class="tbl-wrap"><table><thead><tr><th>Employee</th><th>Date</th><th>Login</th><th>Online</th><th>Offline</th><th>Work Time</th><th>Break</th><th>Score</th><th>Day</th></tr></thead><tbody id="d-tbody"></tbody></table></div></div>
+    </div>
+
+    <!-- WEEKLY -->
+    <div class="tab-panel" id="tab-weekly">
+      <div class="search-row"><input type="week" class="form-control" id="w-week" style="max-width:220px" onchange="loadReport()"/></div>
+      <div class="card"><div class="tbl-wrap"><table><thead><tr><th>Employee</th><th>Date</th><th>Work Time</th><th>Break</th><th>Score</th><th>Day</th></tr></thead><tbody id="w-tbody"></tbody></table></div></div>
+    </div>
+
+    <!-- MONTHLY -->
+    <div class="tab-panel" id="tab-monthly">
+      <div class="search-row"><input type="month" class="form-control" id="m-month" style="max-width:200px" onchange="loadReport()"/></div>
+      <div class="card card-sm mb2" id="m-summary" style="display:none">
+        <div class="stats-grid">
+          <div><div class="tlabel">Days Recorded</div><div class="card-val" id="ms-days">0</div></div>
+          <div><div class="tlabel">Total Work</div><div class="card-val mono" id="ms-work">0h</div></div>
+          <div><div class="tlabel">Avg Score</div><div class="card-val" id="ms-score">—</div></div>
+          <div><div class="tlabel">Avg Break/Day</div><div class="card-val mono" id="ms-break">0m</div></div>
+        </div>
+      </div>
+      <div class="card"><div class="tbl-wrap"><table><thead><tr><th>Employee</th><th>Date</th><th>Work Time</th><th>Break</th><th>Score</th><th>Day</th></tr></thead><tbody id="m-tbody"></tbody></table></div></div>
+    </div>
+
+    <!-- CALENDAR -->
+    <div class="tab-panel" id="tab-calendar">
+      <div class="search-row">
+        <input type="month" class="form-control" id="c-month" style="max-width:200px" onchange="loadReport()"/>
+        <select class="form-control" id="c-emp" onchange="loadReport()" style="max-width:220px;display:none"></select>
+      </div>
+      <div class="card"><div id="cal-container"></div></div>
+    </div>
+  </main>
+</div>
+<div id="toast-wrap"></div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="config.js"></script>
+<script src="report.js"></script>
+</body>
+</html>

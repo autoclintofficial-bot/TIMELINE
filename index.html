@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>Login — WorkTrack</title>
+  <link rel="stylesheet" href="style.css"/>
+</head>
+<body style="display:flex;align-items:center;justify-content:center;min-height:100vh;padding:1.5rem;background-image:radial-gradient(ellipse at 30% 20%,rgba(59,130,246,.07) 0%,transparent 50%),radial-gradient(ellipse at 70% 80%,rgba(34,211,238,.05) 0%,transparent 50%)">
+
+<div style="width:100%;max-width:400px">
+  <div style="text-align:center;margin-bottom:2rem">
+    <div style="width:58px;height:58px;background:linear-gradient(135deg,var(--blue),var(--cyan));border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:1.75rem;margin:0 auto .875rem;box-shadow:0 8px 28px rgba(59,130,246,.3)">⏱</div>
+    <h1 style="font-size:1.6rem;margin-bottom:.2rem">WorkTrack</h1>
+    <p class="t2 tsm">Employee Time &amp; Work Tracking System</p>
+  </div>
+
+  <div class="card">
+    <div id="conn-status" style="display:none;padding:.5rem .75rem;border-radius:var(--r);font-size:.8rem;font-weight:600;margin-bottom:1rem;text-align:center"></div>
+    <div class="form-group">
+      <label class="form-label">Employee ID</label>
+      <input class="form-control" type="text" id="empId" placeholder="Enter your Employee ID" autocomplete="username"/>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Password</label>
+      <input class="form-control" type="password" id="password" placeholder="Enter your password" autocomplete="current-password"/>
+    </div>
+    <div id="err" class="tsm" style="color:var(--red);margin-bottom:.75rem;display:none"></div>
+    <button class="btn btn-primary btn-lg btn-full" id="login-btn" onclick="doLogin()">Sign In →</button>
+    <div class="divider"></div>
+    <p class="tsm t3" style="text-align:center">Default Admin: <span style="font-family:var(--mono);color:var(--cyan)">admin / admin123</span></p>
+  </div>
+</div>
+
+<div id="toast-wrap"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="config.js"></script>
+<script>
+  // Check if already logged in
+  if (Session.isLoggedIn()) {
+    const s = Session.get();
+    window.location.href = s.role === 'admin' ? 'admin-dashboard.html' : 'employee-dashboard.html';
+  }
+
+  // Test connection
+  async function testConnection() {
+    const el = document.getElementById('conn-status');
+    try {
+      const { error } = await db.from('settings').select('id').limit(1);
+      if (error) throw error;
+    } catch(e) {
+      el.style.display = 'block';
+      el.style.background = 'rgba(239,68,68,.12)';
+      el.style.color = 'var(--red)';
+      el.textContent = '⚠ Cannot connect to database. Check config.js SUPABASE_URL and SUPABASE_ANON_KEY.';
+    }
+  }
+  testConnection();
+
+  async function doLogin() {
+    const id = document.getElementById('empId').value.trim();
+    const pw = document.getElementById('password').value;
+    const errEl = document.getElementById('err');
+    const btn = document.getElementById('login-btn');
+    if (!id || !pw) { errEl.textContent = 'Please enter your Employee ID and password.'; errEl.style.display='block'; return; }
+    btn.disabled = true; btn.textContent = 'Signing in...';
+    try {
+      const { data, error } = await db.from('users').select('*').eq('id', id).single();
+      if (error || !data) { errEl.textContent = 'Employee ID not found.'; errEl.style.display='block'; return; }
+      if (data.password !== pw) { errEl.textContent = 'Incorrect password.'; errEl.style.display='block'; return; }
+      if (data.status === 'disabled') { errEl.textContent = 'Your account is disabled. Contact admin.'; errEl.style.display='block'; return; }
+      errEl.style.display = 'none';
+      Session.set(data);
+      showToast(`Welcome, ${data.name}! 👋`, 'success');
+      setTimeout(() => {
+        window.location.href = data.role === 'admin' ? 'admin-dashboard.html' : 'employee-dashboard.html';
+      }, 500);
+    } catch(e) {
+      errEl.textContent = 'Connection error. Check your Supabase config.';
+      errEl.style.display = 'block';
+    } finally {
+      btn.disabled = false; btn.textContent = 'Sign In →';
+    }
+  }
+
+  document.getElementById('password').addEventListener('keydown', e => { if(e.key==='Enter') doLogin(); });
+  document.getElementById('empId').addEventListener('keydown', e => { if(e.key==='Enter') document.getElementById('password').focus(); });
+</script>
+</body>
+</html>
