@@ -8,23 +8,32 @@
 </head>
 <body>
 <div class="topbar">
-  <div class="topbar-left"><div class="sb-icon" style="width:28px;height:28px;font-size:.9rem">⏱</div><span id="topbar-username">Admin</span></div>
+  <div class="topbar-left">
+    <div class="sb-icon topbar-logo-img" style="width:28px;height:28px;font-size:.9rem">⏱</div>
+    <span class="topbar-appname">WorkTrack</span>
+    <span class="t3 tsm" style="margin-left:.25rem">Admin</span>
+  </div>
   <button class="btn btn-sm btn-secondary" onclick="logout()">Sign Out</button>
 </div>
 
 <div class="page">
   <nav class="sidebar" id="sidebar">
     <div class="sb-logo">
-      <div class="sb-logo-row"><div class="sb-icon">⏱</div><div><div class="sb-name">WorkTrack</div><div class="sb-sub">Admin Panel</div></div></div>
+      <div class="sb-logo-row">
+        <div class="sb-icon sb-icon-logo">⏱</div>
+        <div><div class="sb-name">WorkTrack</div><div class="sb-sub">Admin Panel</div></div>
+      </div>
     </div>
     <div class="sb-nav">
       <div class="sb-section">Dashboard</div>
       <button class="nav-item active" onclick="showSec('overview',this)"><span class="ni">📊</span>Overview</button>
       <button class="nav-item" onclick="showSec('employees',this)"><span class="ni">👥</span>Employees</button>
       <div class="sb-section">Work</div>
-      <button class="nav-item" onclick="showSec('tasks',this)"><span class="ni">📋</span>Task Management</button>
-      <div class="sb-section">Reports</div>
+      <button class="nav-item" onclick="showSec('tasks',this)"><span class="ni">📋</span>Tasks</button>
+      <button class="nav-item" onclick="showSec('leaves',this)"><span class="ni">🗓</span>Leave Requests <span id="leave-badge" style="background:var(--orange);color:#000;border-radius:100px;font-size:.65rem;padding:0 5px;font-weight:700;margin-left:auto;display:none">0</span></button>
+      <div class="sb-section">System</div>
       <a class="nav-item" href="report.html"><span class="ni">📈</span>Reports</a>
+      <button class="nav-item" onclick="showSec('branding',this)"><span class="ni">🎨</span>Branding</button>
       <a class="nav-item" href="settings.html"><span class="ni">⚙️</span>Settings</a>
     </div>
     <div class="sb-foot">
@@ -42,17 +51,22 @@
     <section id="sec-overview">
       <div class="ph">
         <div><h1>Dashboard</h1><p id="today-label" class="t2"></p></div>
-        <button class="btn btn-primary" onclick="showSec('employees'); openModal('m-add-emp')">+ Add Employee</button>
+        <button class="btn btn-primary" onclick="showSec('employees',null);setTimeout(()=>openModal('m-add-emp'),100)">+ Add Employee</button>
       </div>
-      <div class="stats-grid" id="stats-grid">
+      <div class="stats-grid">
         <div class="stat-card"><div class="row"><span class="card-title">Total Employees</span><div class="card-icon ci-blue">👥</div></div><div class="card-val" id="st-total">—</div></div>
         <div class="stat-card"><div class="row"><span class="card-title">Online Now</span><div class="card-icon ci-green">🟢</div></div><div class="card-val" id="st-online">—</div></div>
         <div class="stat-card"><div class="row"><span class="card-title">On Break</span><div class="card-icon ci-orange">☕</div></div><div class="card-val" id="st-break">—</div></div>
-        <div class="stat-card"><div class="row"><span class="card-title">Tasks Open</span><div class="card-icon ci-purple">📋</div></div><div class="card-val" id="st-tasks">—</div></div>
+        <div class="stat-card"><div class="row"><span class="card-title">Pending Leaves</span><div class="card-icon ci-red">🗓</div></div><div class="card-val" id="st-leaves">—</div></div>
       </div>
       <div class="card">
         <div class="fcb mb2"><span class="card-title">Live Employee Status</span><span class="tsm t3">Auto-refresh 30s</span></div>
-        <div class="tbl-wrap"><table><thead><tr><th>Employee</th><th>Status</th><th>Online Since</th><th>Work Time</th><th>Break Used</th><th>Score</th><th>Tasks</th></tr></thead><tbody id="live-tbody"><tr><td colspan="7"><div class="loading"><div class="spinner"></div></div></td></tr></tbody></table></div>
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr><th>Employee</th><th>Status</th><th>Online Since</th><th>Work Time</th><th>Break Used</th><th>Score</th><th>Tasks</th></tr></thead>
+            <tbody id="live-tbody"><tr><td colspan="7"><div class="loading"><div class="spinner"></div></div></td></tr></tbody>
+          </table>
+        </div>
       </div>
     </section>
 
@@ -64,7 +78,12 @@
       </div>
       <div class="card">
         <div class="search-row"><input class="search-input" type="text" id="emp-search" placeholder="Search name or ID…" oninput="renderEmpTable()"/></div>
-        <div class="tbl-wrap"><table><thead><tr><th>ID</th><th>Name</th><th>Role</th><th>Status</th><th>Created</th><th>Actions</th></tr></thead><tbody id="emp-tbody"><tr><td colspan="6"><div class="loading"><div class="spinner"></div></div></td></tr></tbody></table></div>
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr><th>Photo</th><th>ID</th><th>Name</th><th>Role</th><th>Status</th><th>Created</th><th>Actions</th></tr></thead>
+            <tbody id="emp-tbody"><tr><td colspan="7"><div class="loading"><div class="spinner"></div></div></td></tr></tbody>
+          </table>
+        </div>
       </div>
     </section>
 
@@ -74,28 +93,84 @@
         <div><h1>Task Management</h1><p class="t2">Assign and track tasks across your team</p></div>
         <button class="btn btn-primary" onclick="openModal('m-add-task')">+ New Task</button>
       </div>
-
-      <!-- Filter Bar -->
+      <!-- Bulk Actions Bar -->
+      <div class="bulk-bar" id="task-bulk-bar">
+        <span class="bulk-info" id="bulk-info">0 tasks selected</span>
+        <button class="btn btn-danger btn-sm" onclick="bulkDeleteTasks()">🗑 Delete Selected</button>
+        <button class="btn btn-secondary btn-sm" onclick="clearTaskSelection()">✕ Clear Selection</button>
+      </div>
+      <!-- Filter -->
       <div class="card card-sm mb2">
         <div class="search-row">
           <select class="form-control" id="tf-employee" onchange="loadTasks()" style="max-width:200px"><option value="">All Employees</option></select>
           <select class="form-control" id="tf-priority" onchange="loadTasks()" style="max-width:160px"><option value="">All Priorities</option><option value="low">Low</option><option value="medium">Medium</option><option value="high">High</option><option value="urgent">Urgent</option></select>
-          <input class="search-input" type="text" id="tf-search" placeholder="Search tasks…" oninput="loadTasks()" style="max-width:240px"/>
+          <input class="search-input" type="text" id="tf-search" placeholder="Search tasks…" oninput="loadTasks()" style="max-width:220px"/>
         </div>
       </div>
-
-      <!-- Kanban Board -->
+      <!-- Kanban -->
       <div class="kanban" id="kanban-board">
         <div class="kanban-col kc-todo"><div class="kanban-col-header"><span class="kanban-col-title t3">📋 To Do</span><span class="kanban-count" id="cnt-todo">0</span></div><div class="kanban-cards" id="col-todo"></div></div>
         <div class="kanban-col kc-inprogress"><div class="kanban-col-header"><span class="kanban-col-title" style="color:var(--blue)">⚡ In Progress</span><span class="kanban-count" id="cnt-inprogress">0</span></div><div class="kanban-cards" id="col-inprogress"></div></div>
         <div class="kanban-col kc-review"><div class="kanban-col-header"><span class="kanban-col-title" style="color:var(--orange)">👁 Review</span><span class="kanban-count" id="cnt-review">0</span></div><div class="kanban-cards" id="col-review"></div></div>
         <div class="kanban-col kc-done"><div class="kanban-col-header"><span class="kanban-col-title" style="color:var(--green)">✅ Done</span><span class="kanban-count" id="cnt-done">0</span></div><div class="kanban-cards" id="col-done"></div></div>
       </div>
-
-      <!-- Task List (below kanban) -->
+      <!-- Table -->
       <div class="card mt2">
-        <div class="card-title">All Tasks — Table View</div>
-        <div class="tbl-wrap"><table><thead><tr><th>Title</th><th>Assigned To</th><th>Priority</th><th>Stage</th><th>Deadline</th><th>Actions</th></tr></thead><tbody id="task-tbody"></tbody></table></div>
+        <div class="fcb mb2">
+          <span class="card-title">All Tasks</span>
+          <label class="fca gap1 tsm t2" style="cursor:pointer"><input type="checkbox" id="select-all-tasks" onchange="toggleSelectAllTasks(this)"/> Select All</label>
+        </div>
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr><th class="cb-cell"></th><th>Title</th><th>Assigned To</th><th>Priority</th><th>Stage</th><th>Deadline</th><th>Actions</th></tr></thead>
+            <tbody id="task-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- LEAVES -->
+    <section id="sec-leaves" style="display:none">
+      <div class="ph">
+        <div><h1>Leave Requests</h1><p class="t2">Review and approve/reject employee leave</p></div>
+        <div class="fca gap2">
+          <select class="form-control" id="leave-filter" onchange="loadLeaves()" style="max-width:160px">
+            <option value="pending">Pending</option>
+            <option value="all">All</option>
+            <option value="approved">Approved</option>
+            <option value="rejected">Rejected</option>
+          </select>
+        </div>
+      </div>
+      <div id="leaves-list"><div class="loading"><div class="spinner"></div></div></div>
+    </section>
+
+    <!-- BRANDING -->
+    <section id="sec-branding" style="display:none">
+      <div class="ph"><div><h1>Branding</h1><p class="t2">Customize your app name and logo</p></div></div>
+      <div style="max-width:520px">
+        <div class="card mb2">
+          <div class="card-title">App Logo</div>
+          <div class="fca gap3 mb2">
+            <div class="branding-logo-preview" id="logo-preview">⏱</div>
+            <div>
+              <label class="btn btn-outline btn-sm" style="cursor:pointer">
+                📁 Upload Logo
+                <input type="file" id="logo-file" accept="image/*" style="display:none" onchange="previewLogo(this)"/>
+              </label>
+              <p class="form-hint mt1">PNG, JPG or SVG. Recommended: 128×128px</p>
+              <button class="btn btn-ghost btn-sm mt1" onclick="removeLogo()">✕ Remove logo</button>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">App Name</label>
+            <input class="form-control" type="text" id="brand-name" placeholder="WorkTrack" maxlength="32"/>
+          </div>
+        </div>
+        <div class="fca gap2">
+          <button class="btn btn-primary" onclick="saveBranding()">💾 Save Branding</button>
+          <button class="btn btn-secondary" onclick="loadBrandingForm()">↺ Reset</button>
+        </div>
       </div>
     </section>
 
@@ -118,11 +193,27 @@
   </div>
 </div>
 
-<!-- EDIT EMPLOYEE MODAL -->
+<!-- EDIT EMPLOYEE MODAL (with photo upload) -->
 <div class="overlay" id="m-edit-emp">
   <div class="modal">
     <div class="modal-head"><span class="modal-title">Edit Employee</span><button class="modal-close" onclick="closeModal('m-edit-emp')">✕</button></div>
     <input type="hidden" id="ee-id"/>
+    <!-- Photo Upload -->
+    <div class="form-group">
+      <label class="form-label">Employee Photo</label>
+      <div class="fca gap2">
+        <label class="photo-upload-btn" style="cursor:pointer">
+          <div id="ee-photo-preview" class="emp-photo-placeholder">👤</div>
+          <div class="photo-overlay">📷 Change</div>
+          <input type="file" id="ee-photo-file" accept="image/*" style="display:none" onchange="previewEmpPhoto(this)"/>
+        </label>
+        <div>
+          <p class="tsm t2">Click photo to upload</p>
+          <p class="form-hint">JPG, PNG. Max 2MB</p>
+          <button type="button" class="btn btn-ghost btn-sm mt1" onclick="removeEmpPhoto()">✕ Remove photo</button>
+        </div>
+      </div>
+    </div>
     <div class="form-group"><label class="form-label">Full Name</label><input class="form-control" id="ee-name"/></div>
     <div class="form-row">
       <div class="form-group"><label class="form-label">New Password <span class="t3">(blank = keep)</span></label><input class="form-control" type="password" id="ee-pw" placeholder="Leave blank…"/></div>
@@ -132,11 +223,11 @@
   </div>
 </div>
 
-<!-- DELETE CONFIRM -->
+<!-- DELETE EMPLOYEE CONFIRM -->
 <div class="overlay" id="m-delete">
   <div class="modal">
     <div class="modal-head"><span class="modal-title">Delete Employee</span><button class="modal-close" onclick="closeModal('m-delete')">✕</button></div>
-    <p class="t2 tsm mb2">Are you sure you want to delete <strong id="del-name"></strong>? All their data will be removed. This cannot be undone.</p>
+    <p class="t2 tsm mb2">Delete <strong id="del-name"></strong>? All their data will be removed. Cannot be undone.</p>
     <input type="hidden" id="del-id"/>
     <div class="modal-foot"><button class="btn btn-secondary" onclick="closeModal('m-delete')">Cancel</button><button class="btn btn-danger" onclick="confirmDelete()">Yes, Delete</button></div>
   </div>
@@ -179,23 +270,33 @@
   </div>
 </div>
 
-<!-- TASK DETAIL MODAL -->
+<!-- TASK DETAIL MODAL (with attachments) -->
 <div class="overlay" id="m-task-detail">
-  <div class="modal modal-lg">
+  <div class="modal modal-xl">
     <div class="modal-head"><span class="modal-title" id="td-title">Task Detail</span><button class="modal-close" onclick="closeModal('m-task-detail')">✕</button></div>
     <div class="task-detail-grid">
       <div>
         <p class="t2 tsm mb2" id="td-desc">—</p>
         <div class="divider"></div>
+        <!-- Attachments -->
+        <div class="card-title">Attachments</div>
+        <div class="attach-list" id="td-attachments"></div>
+        <label class="attach-upload-zone">
+          <input type="file" id="td-attach-input" multiple accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.zip,.txt" onchange="uploadAttachments(this)"/>
+          <div>📎 Click to upload files</div>
+          <div style="font-size:.75rem;margin-top:.25rem">Images, PDF, Word, Excel, ZIP — max 10MB each</div>
+        </label>
+        <div class="divider"></div>
+        <!-- Comments -->
         <div class="card-title">Comments</div>
         <div class="comments-list" id="td-comments"></div>
-        <div class="fca gap1">
-          <input class="form-control" id="td-comment-input" placeholder="Add a comment…" style="flex:1"/>
+        <div class="fca gap1 mt1">
+          <input class="form-control" id="td-comment-input" placeholder="Add a comment…" style="flex:1" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();addComment()}"/>
           <button class="btn btn-primary btn-sm" onclick="addComment()">Send</button>
         </div>
       </div>
       <div>
-        <div class="card card-sm mb1">
+        <div class="card card-sm mb2">
           <div class="card-title">Details</div>
           <div style="display:flex;flex-direction:column;gap:.5rem">
             <div class="fcb tsm"><span class="t3">Assigned To</span><span id="td-assign">—</span></div>
@@ -209,14 +310,37 @@
         <div class="form-group">
           <label class="form-label">Update Stage</label>
           <select class="form-control" id="td-stage-update" onchange="updateTaskStage()">
-            <option value="todo">To Do</option>
-            <option value="inprogress">In Progress</option>
-            <option value="review">Review</option>
-            <option value="done">Done</option>
+            <option value="todo">To Do</option><option value="inprogress">In Progress</option>
+            <option value="review">Review</option><option value="done">Done</option>
           </select>
         </div>
         <input type="hidden" id="td-id"/>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- LEAVE REVIEW MODAL -->
+<div class="overlay" id="m-review-leave">
+  <div class="modal">
+    <div class="modal-head"><span class="modal-title">Review Leave Request</span><button class="modal-close" onclick="closeModal('m-review-leave')">✕</button></div>
+    <input type="hidden" id="rl-id"/>
+    <div class="card card-sm mb2" style="background:var(--bg2)">
+      <div class="fcb tsm mb1"><span class="t3">Employee</span><strong id="rl-emp">—</strong></div>
+      <div class="fcb tsm mb1"><span class="t3">Type</span><span id="rl-type">—</span></div>
+      <div class="tsm t3 mb1">Dates:</div>
+      <div class="leave-dates" id="rl-dates"></div>
+      <div class="tsm t3 mt1">Reason:</div>
+      <p class="tsm t2 mt1" id="rl-reason">—</p>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Admin Note (optional)</label>
+      <textarea class="form-control" id="rl-note" placeholder="Add a note for the employee…" style="min-height:70px"></textarea>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-secondary" onclick="closeModal('m-review-leave')">Cancel</button>
+      <button class="btn btn-danger" onclick="reviewLeave('rejected')">✕ Reject</button>
+      <button class="btn btn-success" onclick="reviewLeave('approved')">✓ Approve</button>
     </div>
   </div>
 </div>
