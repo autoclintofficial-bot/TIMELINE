@@ -16,7 +16,7 @@
 </div>
 
 <div class="page">
-  <nav class="sidebar" id="sidebar">
+  <nav class="sidebar">
     <div class="sb-logo">
       <div class="sb-logo-row">
         <div class="sb-icon sb-icon-logo">⏱</div>
@@ -29,6 +29,7 @@
       <button class="nav-item" onclick="showSec('tasks',this)"><span class="ni">📋</span>My Tasks</button>
       <button class="nav-item" onclick="showSec('breaks',this)"><span class="ni">☕</span>Break Log</button>
       <button class="nav-item" onclick="showSec('leaves',this)"><span class="ni">🗓</span>My Leaves</button>
+      <button class="nav-item" onclick="showSec('incentives',this)"><span class="ni">💰</span>Incentives</button>
       <div class="sb-section">Reports</div>
       <a class="nav-item" href="report.html"><span class="ni">📈</span>My Reports</a>
     </div>
@@ -43,12 +44,14 @@
 
   <main class="content">
 
-    <!-- DASHBOARD -->
+    <!-- ═══════════ DASHBOARD ═══════════ -->
     <section id="sec-dashboard">
       <div class="ph">
         <div><h1 id="greeting">Good morning!</h1><p id="emp-date" class="t2"></p></div>
         <span id="clock" style="font-family:var(--mono);font-size:1.1rem;color:var(--cyan)"></span>
       </div>
+
+      <!-- Status Panel -->
       <div class="status-panel s-offline" id="status-panel">
         <div class="status-ring r-offline" id="status-ring">
           <div class="ring-emoji" id="s-emoji">💤</div>
@@ -71,12 +74,16 @@
           <button class="abtn abtn-off"  id="btn-off"  onclick="goOffline()" disabled>⏹ GO OFFLINE</button>
         </div>
       </div>
+
+      <!-- Timer Cards -->
       <div class="stats-grid mt2">
         <div class="stat-card"><div class="row"><span class="card-title">Work Timer</span><div class="card-icon ci-green">💼</div></div><div class="timer-md mono" id="w-card" style="color:var(--green);font-weight:700">00:00:00</div><div class="prog-wrap mt1"><div class="prog-fill pf-green" id="w-prog" style="width:0%"></div></div><div class="tsm t3 mt1" id="w-lbl">0% of duty</div></div>
         <div class="stat-card"><div class="row"><span class="card-title">Break Used</span><div class="card-icon ci-orange">☕</div></div><div class="timer-md mono" id="b-card" style="color:var(--orange);font-weight:700">00:00:00</div><div class="prog-wrap mt1"><div class="prog-fill pf-orange" id="b-prog" style="width:0%"></div></div><div class="tsm t3 mt1" id="b-lbl">0 min used</div></div>
         <div class="stat-card"><div class="row"><span class="card-title">Break Left</span><div class="card-icon ci-cyan">⏳</div></div><div class="timer-md mono" id="br-card" style="color:var(--cyan);font-weight:700">01:00:00</div><div class="prog-wrap mt1"><div class="prog-fill pf-blue" id="br-prog" style="width:100%"></div></div><div class="tsm t3 mt1" id="br-lbl">60 min left</div></div>
         <div class="stat-card"><div class="row"><span class="card-title">Duty Left</span><div class="card-icon ci-purple">🎯</div></div><div class="timer-md mono" id="d-card" style="color:var(--purple);font-weight:700">09:00:00</div><div class="prog-wrap mt1"><div class="prog-fill" id="d-prog" style="width:0%;background:linear-gradient(90deg,var(--purple),#a78bfa)"></div></div><div class="tsm t3 mt1" id="d-lbl">0% complete</div></div>
       </div>
+
+      <!-- Score + Session -->
       <div class="grid2 mt2">
         <div class="card">
           <div class="card-title">Today's Score</div>
@@ -95,9 +102,38 @@
           </div>
         </div>
       </div>
+
+      <!-- Dashboard Overview: Kanban + Leave Calendar -->
+      <div class="grid-dash mt2">
+        <!-- Mini Kanban -->
+        <div class="card">
+          <div class="fcb mb2">
+            <span class="card-title">My Tasks Overview</span>
+            <button class="btn btn-ghost btn-sm" onclick="showSec('tasks',null)">View All →</button>
+          </div>
+          <div class="kanban kanban-sm" id="dash-kanban">
+            <div class="kanban-col kc-todo" style="min-height:120px"><div class="kanban-col-header"><span class="kanban-col-title t3" style="font-size:.7rem">📋 To Do</span><span class="kanban-count" id="dk-cnt-todo">0</span></div><div class="kanban-cards" id="dk-col-todo"></div></div>
+            <div class="kanban-col kc-inprogress" style="min-height:120px"><div class="kanban-col-header"><span class="kanban-col-title" style="color:var(--blue);font-size:.7rem">⚡ In Progress</span><span class="kanban-count" id="dk-cnt-inprogress">0</span></div><div class="kanban-cards" id="dk-col-inprogress"></div></div>
+            <div class="kanban-col kc-review" style="min-height:120px;display:none" id="dk-col-review-wrap"><div class="kanban-col-header"><span class="kanban-col-title" style="color:var(--orange);font-size:.7rem">👁 Review</span><span class="kanban-count" id="dk-cnt-review">0</span></div><div class="kanban-cards" id="dk-col-review"></div></div>
+            <div class="kanban-col kc-done" style="min-height:120px;display:none" id="dk-col-done-wrap"><div class="kanban-col-header"><span class="kanban-col-title" style="color:var(--green);font-size:.7rem">✅ Done</span><span class="kanban-count" id="dk-cnt-done">0</span></div><div class="kanban-cards" id="dk-col-done"></div></div>
+          </div>
+          <div class="fca gap2 mt2" style="flex-wrap:wrap">
+            <button class="btn btn-ghost btn-sm" id="dk-show-all-btn" onclick="toggleDashKanban()" style="display:none">Show Review & Done ▼</button>
+          </div>
+        </div>
+
+        <!-- Leave Calendar -->
+        <div class="card">
+          <div class="fcb mb2">
+            <span class="card-title">Leave Calendar</span>
+            <button class="btn btn-ghost btn-sm" onclick="showSec('leaves',null)">Apply →</button>
+          </div>
+          <div id="dash-leave-cal"></div>
+        </div>
+      </div>
     </section>
 
-    <!-- MY TASKS -->
+    <!-- ═══════════ MY TASKS ═══════════ -->
     <section id="sec-tasks" style="display:none">
       <div class="ph"><div><h1>My Tasks</h1><p class="t2">Tasks assigned to you</p></div></div>
       <div class="stats-grid mb2">
@@ -114,35 +150,67 @@
       </div>
     </section>
 
-    <!-- BREAK LOG -->
+    <!-- ═══════════ BREAK LOG ═══════════ -->
     <section id="sec-breaks" style="display:none">
       <div class="ph"><div><h1>Break Log</h1><p class="t2">Today's break history</p></div></div>
       <div class="card"><div id="brk-log"><div class="empty-state"><div class="ei">☕</div><p>No breaks today</p></div></div></div>
     </section>
 
-    <!-- MY LEAVES -->
+    <!-- ═══════════ MY LEAVES ═══════════ -->
     <section id="sec-leaves" style="display:none">
       <div class="ph">
         <div><h1>My Leaves</h1><p class="t2">Apply for and track your leave requests</p></div>
-        <button class="btn btn-primary" onclick="openModal('m-apply-leave')">+ Apply for Leave</button>
+        <button class="btn btn-primary" onclick="openApplyLeave()">+ Apply for Leave</button>
       </div>
       <div id="my-leaves-list"><div class="loading"><div class="spinner"></div></div></div>
+    </section>
+
+    <!-- ═══════════ INCENTIVES ═══════════ -->
+    <section id="sec-incentives" style="display:none">
+      <div class="ph">
+        <div><h1>My Incentives</h1><p class="t2">Submit and track your incentive entries</p></div>
+        <div class="fca gap2">
+          <button class="btn btn-outline btn-sm" onclick="exportMyIncentivesCSV()">📊 Export CSV</button>
+          <button class="btn btn-primary" onclick="openModal('m-add-incentive')">+ Add Incentive</button>
+        </div>
+      </div>
+      <!-- Totals -->
+      <div class="stats-grid mb2">
+        <div class="incentive-total-bar stat-card">
+          <div class="card-title">Approved Total</div>
+          <div class="incentive-amount" id="inc-total-approved">₹0.00</div>
+          <div class="tsm t3 mt1" id="inc-count-approved">0 entries</div>
+        </div>
+        <div class="stat-card"><div class="row"><span class="card-title">Pending</span><div class="card-icon ci-orange">⏳</div></div><div class="card-val" id="inc-total-pending">₹0</div><div class="tsm t3 mt1" id="inc-count-pending">0 entries</div></div>
+        <div class="stat-card"><div class="row"><span class="card-title">Rejected</span><div class="card-icon ci-red">✕</div></div><div class="card-val" id="inc-total-rejected">₹0</div><div class="tsm t3 mt1" id="inc-count-rejected">0 entries</div></div>
+      </div>
+      <!-- Filter -->
+      <div class="search-row mb2">
+        <select class="form-control" id="inc-filter-status" onchange="loadMyIncentives()" style="max-width:150px">
+          <option value="">All Status</option>
+          <option value="pending">Pending</option>
+          <option value="approved">Approved</option>
+          <option value="rejected">Rejected</option>
+        </select>
+        <input class="search-input" type="month" id="inc-filter-month" onchange="loadMyIncentives()" style="max-width:180px"/>
+      </div>
+      <div id="my-incentives-list"><div class="loading"><div class="spinner"></div></div></div>
     </section>
 
   </main>
 </div>
 
-<!-- IDLE WARNING -->
+<!-- ═══ IDLE WARNING ═══ -->
 <div class="idle-overlay" id="idle-overlay">
   <div class="idle-box">
     <div style="font-size:2.5rem;margin-bottom:.875rem">😴</div>
     <h2 style="margin-bottom:.5rem">Still there?</h2>
-    <p class="t2 tsm mb2">No activity for 5 minutes. Click to confirm you're working.</p>
+    <p class="t2 tsm mb2">No activity for 5 minutes.</p>
     <button class="btn btn-warning btn-lg" onclick="dismissIdle()">Yes, I'm here!</button>
   </div>
 </div>
 
-<!-- BREAK WARNING -->
+<!-- ═══ BREAK WARNING ═══ -->
 <div class="overlay" id="m-brk-warn">
   <div class="modal">
     <div class="modal-head"><span class="modal-title">⚠️ Break Limit Warning</span><button class="modal-close" onclick="closeModal('m-brk-warn')">✕</button></div>
@@ -151,7 +219,7 @@
   </div>
 </div>
 
-<!-- TASK DETAIL MODAL (employee) -->
+<!-- ═══ TASK DETAIL ═══ -->
 <div class="overlay" id="m-emp-task-detail">
   <div class="modal modal-xl">
     <div class="modal-head"><span class="modal-title" id="etd-title">Task</span><button class="modal-close" onclick="closeModal('m-emp-task-detail')">✕</button></div>
@@ -159,7 +227,6 @@
       <div>
         <p class="t2 tsm mb2" id="etd-desc">—</p>
         <div class="divider"></div>
-        <!-- Attachments -->
         <div class="card-title">Attachments</div>
         <div class="attach-list" id="etd-attachments"></div>
         <label class="attach-upload-zone">
@@ -198,33 +265,72 @@
   </div>
 </div>
 
-<!-- APPLY LEAVE MODAL -->
+<!-- ═══ APPLY LEAVE MODAL (with calendar picker) ═══ -->
 <div class="overlay" id="m-apply-leave">
-  <div class="modal">
+  <div class="modal modal-lg">
     <div class="modal-head"><span class="modal-title">Apply for Leave</span><button class="modal-close" onclick="closeModal('m-apply-leave')">✕</button></div>
-    <div class="form-group">
-      <label class="form-label">Leave Type</label>
-      <select class="form-control" id="al-type">
-        <option value="full">Full Day</option>
-        <option value="half">Half Day</option>
-      </select>
-    </div>
-    <div class="form-group">
-      <label class="form-label">Select Date(s)</label>
-      <div class="fca gap1">
-        <input class="form-control" type="date" id="al-date-picker" style="flex:1"/>
-        <button class="btn btn-outline btn-sm" onclick="addLeaveDate()">+ Add</button>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Leave Type</label>
+        <select class="form-control" id="al-type">
+          <option value="full">Full Day</option>
+          <option value="half">Half Day</option>
+        </select>
       </div>
-      <div class="date-chips" id="al-date-chips"></div>
-      <p class="form-hint">Add one or multiple dates</p>
+      <div class="form-group">
+        <label class="form-label">Selected Dates</label>
+        <div class="date-chips" id="al-date-chips" style="min-height:38px;padding:.25rem 0"></div>
+        <p class="form-hint">Click dates on the calendar below</p>
+      </div>
+    </div>
+    <!-- Inline Calendar Picker -->
+    <div class="form-group">
+      <label class="form-label">Pick Dates</label>
+      <div class="cal-picker" id="leave-cal-picker">
+        <div class="cal-picker-head">
+          <button class="cal-picker-nav" onclick="calPickerNav(-1)">‹</button>
+          <span class="cal-picker-title" id="cp-title"></span>
+          <button class="cal-picker-nav" onclick="calPickerNav(1)">›</button>
+        </div>
+        <div class="cal-picker-grid" id="cp-grid"></div>
+      </div>
     </div>
     <div class="form-group">
-      <label class="form-label">Reason</label>
-      <textarea class="form-control" id="al-reason" placeholder="Explain the reason for your leave…" style="min-height:90px"></textarea>
+      <label class="form-label">Reason for Leave</label>
+      <textarea class="form-control" id="al-reason" placeholder="Explain the reason for your leave…" style="min-height:80px"></textarea>
     </div>
     <div class="modal-foot">
       <button class="btn btn-secondary" onclick="closeModal('m-apply-leave')">Cancel</button>
       <button class="btn btn-primary" onclick="submitLeave()">Submit Request</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ ADD INCENTIVE MODAL ═══ -->
+<div class="overlay" id="m-add-incentive">
+  <div class="modal">
+    <div class="modal-head"><span class="modal-title">Add Incentive Entry</span><button class="modal-close" onclick="closeModal('m-add-incentive')">✕</button></div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Date</label>
+        <input class="form-control" type="date" id="ni-date"/>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Order ID</label>
+        <input class="form-control" type="text" id="ni-order" placeholder="e.g. ORD-20250411"/>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Remark</label>
+      <input class="form-control" type="text" id="ni-remark" placeholder="Brief description of the incentive…"/>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Amount (₹)</label>
+      <input class="form-control" type="number" id="ni-amount" placeholder="0.00" min="0" step="0.01"/>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-secondary" onclick="closeModal('m-add-incentive')">Cancel</button>
+      <button class="btn btn-primary" onclick="submitIncentive()">Submit Entry</button>
     </div>
   </div>
 </div>
