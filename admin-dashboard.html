@@ -17,7 +17,7 @@
 </div>
 
 <div class="page">
-  <nav class="sidebar" id="sidebar">
+  <nav class="sidebar">
     <div class="sb-logo">
       <div class="sb-logo-row">
         <div class="sb-icon sb-icon-logo">⏱</div>
@@ -31,6 +31,7 @@
       <div class="sb-section">Work</div>
       <button class="nav-item" onclick="showSec('tasks',this)"><span class="ni">📋</span>Tasks</button>
       <button class="nav-item" onclick="showSec('leaves',this)"><span class="ni">🗓</span>Leave Requests <span id="leave-badge" style="background:var(--orange);color:#000;border-radius:100px;font-size:.65rem;padding:0 5px;font-weight:700;margin-left:auto;display:none">0</span></button>
+      <button class="nav-item" onclick="showSec('incentives',this)"><span class="ni">💰</span>Incentives <span id="inc-badge" style="background:var(--yellow);color:#000;border-radius:100px;font-size:.65rem;padding:0 5px;font-weight:700;margin-left:auto;display:none">0</span></button>
       <div class="sb-section">System</div>
       <a class="nav-item" href="report.html"><span class="ni">📈</span>Reports</a>
       <button class="nav-item" onclick="showSec('branding',this)"><span class="ni">🎨</span>Branding</button>
@@ -47,7 +48,7 @@
 
   <main class="content">
 
-    <!-- OVERVIEW -->
+    <!-- ══ OVERVIEW ══ -->
     <section id="sec-overview">
       <div class="ph">
         <div><h1>Dashboard</h1><p id="today-label" class="t2"></p></div>
@@ -56,21 +57,31 @@
       <div class="stats-grid">
         <div class="stat-card"><div class="row"><span class="card-title">Total Employees</span><div class="card-icon ci-blue">👥</div></div><div class="card-val" id="st-total">—</div></div>
         <div class="stat-card"><div class="row"><span class="card-title">Online Now</span><div class="card-icon ci-green">🟢</div></div><div class="card-val" id="st-online">—</div></div>
-        <div class="stat-card"><div class="row"><span class="card-title">On Break</span><div class="card-icon ci-orange">☕</div></div><div class="card-val" id="st-break">—</div></div>
-        <div class="stat-card"><div class="row"><span class="card-title">Pending Leaves</span><div class="card-icon ci-red">🗓</div></div><div class="card-val" id="st-leaves">—</div></div>
+        <div class="stat-card"><div class="row"><span class="card-title">Pending Leaves</span><div class="card-icon ci-orange">🗓</div></div><div class="card-val" id="st-leaves">—</div></div>
+        <div class="stat-card"><div class="row"><span class="card-title">Pending Incentives</span><div class="card-icon ci-yellow">💰</div></div><div class="card-val" id="st-incentives">—</div></div>
       </div>
-      <div class="card">
-        <div class="fcb mb2"><span class="card-title">Live Employee Status</span><span class="tsm t3">Auto-refresh 30s</span></div>
-        <div class="tbl-wrap">
-          <table>
-            <thead><tr><th>Employee</th><th>Status</th><th>Online Since</th><th>Work Time</th><th>Break Used</th><th>Score</th><th>Tasks</th></tr></thead>
-            <tbody id="live-tbody"><tr><td colspan="7"><div class="loading"><div class="spinner"></div></div></td></tr></tbody>
-          </table>
+
+      <!-- Overview Grid: Live Status + Leave Calendar -->
+      <div class="grid-dash">
+        <div class="card">
+          <div class="fcb mb2"><span class="card-title">Live Employee Status</span><span class="tsm t3">Auto-refresh 30s</span></div>
+          <div class="tbl-wrap">
+            <table>
+              <thead><tr><th>Employee</th><th>Status</th><th>Work Time</th><th>Break</th><th>Score</th><th>Tasks</th></tr></thead>
+              <tbody id="live-tbody"><tr><td colspan="6"><div class="loading"><div class="spinner"></div></div></td></tr></tbody>
+            </table>
+          </div>
+        </div>
+        <div class="card">
+          <div class="fcb mb2"><span class="card-title">Team Leave Calendar</span>
+            <button class="btn btn-ghost btn-sm" onclick="showSec('leaves',null)">Manage →</button>
+          </div>
+          <div id="admin-leave-cal"></div>
         </div>
       </div>
     </section>
 
-    <!-- EMPLOYEES -->
+    <!-- ══ EMPLOYEES ══ -->
     <section id="sec-employees" style="display:none">
       <div class="ph">
         <div><h1>Manage Employees</h1><p class="t2">Create, edit and manage accounts</p></div>
@@ -87,19 +98,17 @@
       </div>
     </section>
 
-    <!-- TASKS -->
+    <!-- ══ TASKS ══ -->
     <section id="sec-tasks" style="display:none">
       <div class="ph">
-        <div><h1>Task Management</h1><p class="t2">Assign and track tasks across your team</p></div>
+        <div><h1>Task Management</h1><p class="t2">Assign and track tasks</p></div>
         <button class="btn btn-primary" onclick="openModal('m-add-task')">+ New Task</button>
       </div>
-      <!-- Bulk Actions Bar -->
       <div class="bulk-bar" id="task-bulk-bar">
-        <span class="bulk-info" id="bulk-info">0 tasks selected</span>
+        <span class="bulk-info" id="bulk-info">0 selected</span>
         <button class="btn btn-danger btn-sm" onclick="bulkDeleteTasks()">🗑 Delete Selected</button>
-        <button class="btn btn-secondary btn-sm" onclick="clearTaskSelection()">✕ Clear Selection</button>
+        <button class="btn btn-secondary btn-sm" onclick="clearTaskSelection()">✕ Clear</button>
       </div>
-      <!-- Filter -->
       <div class="card card-sm mb2">
         <div class="search-row">
           <select class="form-control" id="tf-employee" onchange="loadTasks()" style="max-width:200px"><option value="">All Employees</option></select>
@@ -107,45 +116,63 @@
           <input class="search-input" type="text" id="tf-search" placeholder="Search tasks…" oninput="loadTasks()" style="max-width:220px"/>
         </div>
       </div>
-      <!-- Kanban -->
-      <div class="kanban" id="kanban-board">
+      <div class="kanban">
         <div class="kanban-col kc-todo"><div class="kanban-col-header"><span class="kanban-col-title t3">📋 To Do</span><span class="kanban-count" id="cnt-todo">0</span></div><div class="kanban-cards" id="col-todo"></div></div>
         <div class="kanban-col kc-inprogress"><div class="kanban-col-header"><span class="kanban-col-title" style="color:var(--blue)">⚡ In Progress</span><span class="kanban-count" id="cnt-inprogress">0</span></div><div class="kanban-cards" id="col-inprogress"></div></div>
         <div class="kanban-col kc-review"><div class="kanban-col-header"><span class="kanban-col-title" style="color:var(--orange)">👁 Review</span><span class="kanban-count" id="cnt-review">0</span></div><div class="kanban-cards" id="col-review"></div></div>
         <div class="kanban-col kc-done"><div class="kanban-col-header"><span class="kanban-col-title" style="color:var(--green)">✅ Done</span><span class="kanban-count" id="cnt-done">0</span></div><div class="kanban-cards" id="col-done"></div></div>
       </div>
-      <!-- Table -->
       <div class="card mt2">
         <div class="fcb mb2">
           <span class="card-title">All Tasks</span>
           <label class="fca gap1 tsm t2" style="cursor:pointer"><input type="checkbox" id="select-all-tasks" onchange="toggleSelectAllTasks(this)"/> Select All</label>
         </div>
         <div class="tbl-wrap">
-          <table>
-            <thead><tr><th class="cb-cell"></th><th>Title</th><th>Assigned To</th><th>Priority</th><th>Stage</th><th>Deadline</th><th>Actions</th></tr></thead>
-            <tbody id="task-tbody"></tbody>
-          </table>
+          <table><thead><tr><th class="cb-cell"></th><th>Title</th><th>Assigned To</th><th>Priority</th><th>Stage</th><th>Deadline</th><th>Actions</th></tr></thead><tbody id="task-tbody"></tbody></table>
         </div>
       </div>
     </section>
 
-    <!-- LEAVES -->
+    <!-- ══ LEAVES ══ -->
     <section id="sec-leaves" style="display:none">
       <div class="ph">
         <div><h1>Leave Requests</h1><p class="t2">Review and approve/reject employee leave</p></div>
-        <div class="fca gap2">
-          <select class="form-control" id="leave-filter" onchange="loadLeaves()" style="max-width:160px">
-            <option value="pending">Pending</option>
-            <option value="all">All</option>
-            <option value="approved">Approved</option>
-            <option value="rejected">Rejected</option>
-          </select>
-        </div>
+        <select class="form-control" id="leave-filter" onchange="loadLeaves()" style="max-width:160px">
+          <option value="pending">Pending</option><option value="all">All</option>
+          <option value="approved">Approved</option><option value="rejected">Rejected</option>
+        </select>
       </div>
       <div id="leaves-list"><div class="loading"><div class="spinner"></div></div></div>
     </section>
 
-    <!-- BRANDING -->
+    <!-- ══ INCENTIVES ══ -->
+    <section id="sec-incentives" style="display:none">
+      <div class="ph">
+        <div><h1>Incentives</h1><p class="t2">Review employee incentive submissions</p></div>
+        <button class="btn btn-outline btn-sm" onclick="exportAllIncentivesCSV()">📊 Export All CSV</button>
+      </div>
+      <!-- Summary -->
+      <div class="stats-grid mb2">
+        <div class="incentive-total-bar stat-card">
+          <div class="card-title">Total Approved</div>
+          <div class="incentive-amount" id="adm-inc-total">₹0.00</div>
+          <div class="tsm t3 mt1" id="adm-inc-count">0 entries</div>
+        </div>
+        <div class="stat-card"><div class="row"><span class="card-title">Pending Review</span><div class="card-icon ci-orange">⏳</div></div><div class="card-val" id="adm-inc-pending">0</div></div>
+        <div class="stat-card"><div class="row"><span class="card-title">This Month</span><div class="card-icon ci-blue">📅</div></div><div class="card-val" id="adm-inc-month">₹0</div></div>
+      </div>
+      <!-- Filter -->
+      <div class="card card-sm mb2">
+        <div class="search-row">
+          <select class="form-control" id="adm-inc-emp" onchange="loadAdminIncentives()" style="max-width:220px"><option value="">All Employees</option></select>
+          <select class="form-control" id="adm-inc-status" onchange="loadAdminIncentives()" style="max-width:150px"><option value="pending">Pending</option><option value="">All</option><option value="approved">Approved</option><option value="rejected">Rejected</option></select>
+          <input class="search-input" type="month" id="adm-inc-month-filter" onchange="loadAdminIncentives()" style="max-width:180px"/>
+        </div>
+      </div>
+      <div id="admin-incentives-list"><div class="loading"><div class="spinner"></div></div></div>
+    </section>
+
+    <!-- ══ BRANDING ══ -->
     <section id="sec-branding" style="display:none">
       <div class="ph"><div><h1>Branding</h1><p class="t2">Customize your app name and logo</p></div></div>
       <div style="max-width:520px">
@@ -154,30 +181,21 @@
           <div class="fca gap3 mb2">
             <div class="branding-logo-preview" id="logo-preview">⏱</div>
             <div>
-              <label class="btn btn-outline btn-sm" style="cursor:pointer">
-                📁 Upload Logo
-                <input type="file" id="logo-file" accept="image/*" style="display:none" onchange="previewLogo(this)"/>
-              </label>
-              <p class="form-hint mt1">PNG, JPG or SVG. Recommended: 128×128px</p>
+              <label class="btn btn-outline btn-sm" style="cursor:pointer">📁 Upload Logo<input type="file" id="logo-file" accept="image/*" style="display:none" onchange="previewLogo(this)"/></label>
+              <p class="form-hint mt1">PNG, JPG or SVG. 128×128px recommended</p>
               <button class="btn btn-ghost btn-sm mt1" onclick="removeLogo()">✕ Remove logo</button>
             </div>
           </div>
-          <div class="form-group">
-            <label class="form-label">App Name</label>
-            <input class="form-control" type="text" id="brand-name" placeholder="WorkTrack" maxlength="32"/>
-          </div>
+          <div class="form-group"><label class="form-label">App Name</label><input class="form-control" type="text" id="brand-name" placeholder="WorkTrack" maxlength="32"/></div>
         </div>
-        <div class="fca gap2">
-          <button class="btn btn-primary" onclick="saveBranding()">💾 Save Branding</button>
-          <button class="btn btn-secondary" onclick="loadBrandingForm()">↺ Reset</button>
-        </div>
+        <div class="fca gap2"><button class="btn btn-primary" onclick="saveBranding()">💾 Save Branding</button><button class="btn btn-secondary" onclick="loadBrandingForm()">↺ Reset</button></div>
       </div>
     </section>
 
   </main>
 </div>
 
-<!-- ADD EMPLOYEE MODAL -->
+<!-- ═══ ADD EMPLOYEE ═══ -->
 <div class="overlay" id="m-add-emp">
   <div class="modal">
     <div class="modal-head"><span class="modal-title">Add New Employee</span><button class="modal-close" onclick="closeModal('m-add-emp')">✕</button></div>
@@ -193,25 +211,20 @@
   </div>
 </div>
 
-<!-- EDIT EMPLOYEE MODAL (with photo upload) -->
+<!-- ═══ EDIT EMPLOYEE ═══ -->
 <div class="overlay" id="m-edit-emp">
   <div class="modal">
     <div class="modal-head"><span class="modal-title">Edit Employee</span><button class="modal-close" onclick="closeModal('m-edit-emp')">✕</button></div>
     <input type="hidden" id="ee-id"/>
-    <!-- Photo Upload -->
     <div class="form-group">
       <label class="form-label">Employee Photo</label>
       <div class="fca gap2">
         <label class="photo-upload-btn" style="cursor:pointer">
           <div id="ee-photo-preview" class="emp-photo-placeholder">👤</div>
-          <div class="photo-overlay">📷 Change</div>
+          <div class="photo-overlay">📷</div>
           <input type="file" id="ee-photo-file" accept="image/*" style="display:none" onchange="previewEmpPhoto(this)"/>
         </label>
-        <div>
-          <p class="tsm t2">Click photo to upload</p>
-          <p class="form-hint">JPG, PNG. Max 2MB</p>
-          <button type="button" class="btn btn-ghost btn-sm mt1" onclick="removeEmpPhoto()">✕ Remove photo</button>
-        </div>
+        <div><p class="tsm t2">Click to upload photo</p><p class="form-hint">JPG, PNG. Max 2MB</p><button type="button" class="btn btn-ghost btn-sm mt1" onclick="removeEmpPhoto()">✕ Remove</button></div>
       </div>
     </div>
     <div class="form-group"><label class="form-label">Full Name</label><input class="form-control" id="ee-name"/></div>
@@ -223,22 +236,22 @@
   </div>
 </div>
 
-<!-- DELETE EMPLOYEE CONFIRM -->
+<!-- ═══ DELETE EMPLOYEE ═══ -->
 <div class="overlay" id="m-delete">
   <div class="modal">
     <div class="modal-head"><span class="modal-title">Delete Employee</span><button class="modal-close" onclick="closeModal('m-delete')">✕</button></div>
-    <p class="t2 tsm mb2">Delete <strong id="del-name"></strong>? All their data will be removed. Cannot be undone.</p>
+    <p class="t2 tsm mb2">Delete <strong id="del-name"></strong>? All data removed. Cannot be undone.</p>
     <input type="hidden" id="del-id"/>
     <div class="modal-foot"><button class="btn btn-secondary" onclick="closeModal('m-delete')">Cancel</button><button class="btn btn-danger" onclick="confirmDelete()">Yes, Delete</button></div>
   </div>
 </div>
 
-<!-- ADD TASK MODAL -->
+<!-- ═══ ADD TASK ═══ -->
 <div class="overlay" id="m-add-task">
   <div class="modal modal-lg">
     <div class="modal-head"><span class="modal-title">Create New Task</span><button class="modal-close" onclick="closeModal('m-add-task')">✕</button></div>
-    <div class="form-group"><label class="form-label">Task Title</label><input class="form-control" id="nt-title" placeholder="e.g. Prepare monthly report"/></div>
-    <div class="form-group"><label class="form-label">Description</label><textarea class="form-control" id="nt-desc" placeholder="Task details, requirements…"></textarea></div>
+    <div class="form-group"><label class="form-label">Title</label><input class="form-control" id="nt-title" placeholder="e.g. Prepare monthly report"/></div>
+    <div class="form-group"><label class="form-label">Description</label><textarea class="form-control" id="nt-desc" placeholder="Task details…"></textarea></div>
     <div class="form-row">
       <div class="form-group"><label class="form-label">Assign To</label><select class="form-control" id="nt-assign"></select></div>
       <div class="form-group"><label class="form-label">Priority</label><select class="form-control" id="nt-priority"><option value="low">Low</option><option value="medium" selected>Medium</option><option value="high">High</option><option value="urgent">Urgent</option></select></div>
@@ -251,12 +264,12 @@
   </div>
 </div>
 
-<!-- EDIT TASK MODAL -->
+<!-- ═══ EDIT TASK ═══ -->
 <div class="overlay" id="m-edit-task">
   <div class="modal modal-lg">
     <div class="modal-head"><span class="modal-title">Edit Task</span><button class="modal-close" onclick="closeModal('m-edit-task')">✕</button></div>
     <input type="hidden" id="et-id"/>
-    <div class="form-group"><label class="form-label">Task Title</label><input class="form-control" id="et-title"/></div>
+    <div class="form-group"><label class="form-label">Title</label><input class="form-control" id="et-title"/></div>
     <div class="form-group"><label class="form-label">Description</label><textarea class="form-control" id="et-desc"></textarea></div>
     <div class="form-row">
       <div class="form-group"><label class="form-label">Assign To</label><select class="form-control" id="et-assign"></select></div>
@@ -270,7 +283,7 @@
   </div>
 </div>
 
-<!-- TASK DETAIL MODAL (with attachments) -->
+<!-- ═══ TASK DETAIL ═══ -->
 <div class="overlay" id="m-task-detail">
   <div class="modal modal-xl">
     <div class="modal-head"><span class="modal-title" id="td-title">Task Detail</span><button class="modal-close" onclick="closeModal('m-task-detail')">✕</button></div>
@@ -278,16 +291,10 @@
       <div>
         <p class="t2 tsm mb2" id="td-desc">—</p>
         <div class="divider"></div>
-        <!-- Attachments -->
         <div class="card-title">Attachments</div>
         <div class="attach-list" id="td-attachments"></div>
-        <label class="attach-upload-zone">
-          <input type="file" id="td-attach-input" multiple accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.zip,.txt" onchange="uploadAttachments(this)"/>
-          <div>📎 Click to upload files</div>
-          <div style="font-size:.75rem;margin-top:.25rem">Images, PDF, Word, Excel, ZIP — max 10MB each</div>
-        </label>
+        <label class="attach-upload-zone"><input type="file" id="td-attach-input" multiple accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.zip,.txt" onchange="uploadAttachments(this)"/><div>📎 Click to upload</div><div style="font-size:.75rem;margin-top:.2rem">Max 10MB each</div></label>
         <div class="divider"></div>
-        <!-- Comments -->
         <div class="card-title">Comments</div>
         <div class="comments-list" id="td-comments"></div>
         <div class="fca gap1 mt1">
@@ -320,7 +327,7 @@
   </div>
 </div>
 
-<!-- LEAVE REVIEW MODAL -->
+<!-- ═══ LEAVE REVIEW MODAL ═══ -->
 <div class="overlay" id="m-review-leave">
   <div class="modal">
     <div class="modal-head"><span class="modal-title">Review Leave Request</span><button class="modal-close" onclick="closeModal('m-review-leave')">✕</button></div>
@@ -333,14 +340,33 @@
       <div class="tsm t3 mt1">Reason:</div>
       <p class="tsm t2 mt1" id="rl-reason">—</p>
     </div>
-    <div class="form-group">
-      <label class="form-label">Admin Note (optional)</label>
-      <textarea class="form-control" id="rl-note" placeholder="Add a note for the employee…" style="min-height:70px"></textarea>
-    </div>
+    <div class="form-group"><label class="form-label">Admin Note (optional)</label><textarea class="form-control" id="rl-note" placeholder="Note for employee…" style="min-height:70px"></textarea></div>
     <div class="modal-foot">
       <button class="btn btn-secondary" onclick="closeModal('m-review-leave')">Cancel</button>
       <button class="btn btn-danger" onclick="reviewLeave('rejected')">✕ Reject</button>
       <button class="btn btn-success" onclick="reviewLeave('approved')">✓ Approve</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ INCENTIVE REVIEW MODAL ═══ -->
+<div class="overlay" id="m-review-incentive">
+  <div class="modal">
+    <div class="modal-head"><span class="modal-title">Review Incentive</span><button class="modal-close" onclick="closeModal('m-review-incentive')">✕</button></div>
+    <input type="hidden" id="ri-id"/>
+    <div class="card card-sm mb2" style="background:var(--bg2)">
+      <div class="fcb tsm mb1"><span class="t3">Employee</span><strong id="ri-emp">—</strong></div>
+      <div class="fcb tsm mb1"><span class="t3">Date</span><span id="ri-date" class="mono">—</span></div>
+      <div class="fcb tsm mb1"><span class="t3">Order ID</span><span id="ri-order" class="mono">—</span></div>
+      <div class="fcb tsm mb1"><span class="t3">Amount</span><span id="ri-amount" class="incentive-amount-sm amt-pending">—</span></div>
+      <div class="tsm t3 mt1">Remark:</div>
+      <p class="tsm t2 mt1" id="ri-remark">—</p>
+    </div>
+    <div class="form-group"><label class="form-label">Admin Note (optional)</label><textarea class="form-control" id="ri-note" placeholder="Note for employee…" style="min-height:70px"></textarea></div>
+    <div class="modal-foot">
+      <button class="btn btn-secondary" onclick="closeModal('m-review-incentive')">Cancel</button>
+      <button class="btn btn-danger" onclick="reviewIncentive('rejected')">✕ Reject</button>
+      <button class="btn btn-success" onclick="reviewIncentive('approved')">✓ Approve</button>
     </div>
   </div>
 </div>
